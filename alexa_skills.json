@@ -1,0 +1,136 @@
+{
+  "intents": [
+    {
+      "name": "AMAZON.CancelIntent",
+      "samples": []
+    },
+    {
+      "name": "AMAZON.HelpIntent",
+      "samples": []
+    },
+    {
+      "name": "AMAZON.StopIntent",
+      "samples": []
+    },
+    {
+      "name": "FullDayTripIntent",
+      "samples": [
+        "Plan a {Time} trip for me in {city}",
+        "Plan a {Time} trip for me at {city}",
+        "Plan a trip to {city} for {Time} long",
+        "Can you plan me a trip to {city} for {Time}",
+        "Plan me a trip to {city} for {Time}",
+        "Plan a trip to {city} for {Time}",
+        "I want a {Time} trip to {city}",
+        "I want to go to {city} for {Time}"
+      ],
+      "slots": [
+        {
+          "name": "city",
+          "type": "AMAZON.AT_CITY",
+          "samples": [
+            "I want to explore {city}",
+            "{city}",
+            "I want to see {city}",
+            "I want to go to {city}",
+            "I wanna see {city}"
+          ]
+        },
+        {
+          "name": "Time",
+          "type": "AMAZON.DURATION",
+          "samples": [
+            "{Time}",
+            "I want a trip of {Time}",
+            "I want it to be {Time}",
+            "I want it {Time} long"
+          ]
+        }
+      ]
+    }
+  ],
+  "types": [
+    {
+      "name": "DurationTime",
+      "values": [
+        {
+          "name": {
+            "value": "Full Day"
+          }
+        },
+        {
+          "name": {
+            "value": "Half Day"
+          }
+        }
+      ]
+    }
+  ],
+  "prompts": [
+    {
+      "id": "Confirm.Intent-FullDayTripIntent",
+      "promptVersion": "1.0",
+      "definitionVersion": "1.0",
+      "variations": [
+        {
+          "type": "PlainText",
+          "value": "Are you sure?"
+        }
+      ]
+    },
+    {
+      "id": "Elicit.Intent-FullDayTripIntent.IntentSlot-city",
+      "promptVersion": "1.0",
+      "definitionVersion": "1.0",
+      "variations": [
+        {
+          "type": "PlainText",
+          "value": "Which city do you want to explore?"
+        }
+      ]
+    },
+    {
+      "id": "Elicit.Intent-FullDayTripIntent.IntentSlot-Time",
+      "promptVersion": "1.0",
+      "definitionVersion": "1.0",
+      "variations": [
+        {
+          "type": "PlainText",
+          "value": "What duration do you want the trip to be?"
+        }
+      ]
+    }
+  ],
+  "dialog": {
+    "version": "1.0",
+    "intents": [
+      {
+        "name": "FullDayTripIntent",
+        "confirmationRequired": true,
+        "prompts": {
+          "confirm": "Confirm.Intent-FullDayTripIntent"
+        },
+        "slots": [
+          {
+            "name": "city",
+            "type": "AMAZON.AT_CITY",
+            "elicitationRequired": true,
+            "confirmationRequired": false,
+            "prompts": {
+              "elicit": "Elicit.Intent-FullDayTripIntent.IntentSlot-city"
+            }
+          },
+          {
+            "name": "Time",
+            "type": "AMAZON.DURATION",
+            "elicitationRequired": true,
+            "confirmationRequired": false,
+            "prompts": {
+              "elicit": "Elicit.Intent-FullDayTripIntent.IntentSlot-Time"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -95,17 +95,19 @@ def get_trip_from_session(intent, session):
 	session_attributes = {}
 	should_end_session = True
 
-	if 'city' in intent['slots'] and 'value' in intent['slots']['city']:
+	if 'city' in intent['slots'] and 'value' in intent['slots']['city'] and 'Time' in intent['slots'] and 'value' in intent['slots']['Time']:
 		try:
 			city = intent['slots']['city']['value']
+		time = intent['slots']['Time']['value']
 			print("Request is for " + city)
 			card_title += " in " + city
 			session_attributes = create_current_city_attributes(city)
-			(text_response, card_response, photo) = planner.get_route_sequence(city)
+		(text_response, card_response, photo) = planner.get_route_sequence(city, time)
 			speech_output = text_response
 			speech_output = speech_output.replace("&", "and")
 			reprompt_text = speech_output
 		except Exception as e:
+		if 'city' not in intent['slots'] or 'value' not in intent['slots']['city']:
 			print("City is not there in the request")
 			speech_output = "I'm not sure what city you referred to. " \
 							"Please try again."
@@ -114,8 +116,8 @@ def get_trip_from_session(intent, session):
 			photo = None
 			should_end_session = False
 	else:
-		print("City is not there in the request")
-		speech_output = "I'm not sure what city you referred to. " \
+			print("Duration is not there in the request")
+			speech_output = "I'm not sure what duration you asked for. " \
 						"Please try again."
 		reprompt_text = speech_output
 		card_response = "Try again. Note that only cities in USA are supported."
@@ -190,7 +192,7 @@ def lambda_handler(event, context):
 	function.
 	"""
 	if (event['session']['application']['applicationId'] !=
-	        "amzn1.ask.skill.65387374-e31f-4ee6-a5be-0c59ed4394dc"):
+	        "amzn1.ask.skill.663404a2-321c-45c3-8365-9e260b16bcf4"):
 	    raise ValueError("Invalid Application ID")
 
 	if event['session']['new']:

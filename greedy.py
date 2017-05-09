@@ -11,7 +11,7 @@ if "xrange" not in globals():
 else:
     #py2
     pass
-    
+
 
 def optimize_solution( distances, connections ):
     """Tries to optimize solution, found by the greedy algorithm"""
@@ -39,9 +39,9 @@ def optimize_solution( distances, connections ):
                 connections[path[d]].remove(path[c])
                 connections[path[d]].append(path[b])
                 path[:] = restore_path( connections )
-    
+
     return optimizations, d_total
-        
+
 def restore_path( connections ):
     """Takes array of connections and returns a path.
     Connections is array of lists with 1 or 2 elements.
@@ -49,14 +49,14 @@ def restore_path( connections ):
     Guarantees that first index < last index
     """
     #there are 2 nodes with valency 1 - start and end. Get them.
-    start, end = [idx 
+    start, end = [idx
                   for idx, conn in enumerate(connections)
                   if len(conn)==1 ]
     path = [start]
     prev_point = None
     cur_point = start
     while True:
-        next_points = [pnt for pnt in connections[cur_point] 
+        next_points = [pnt for pnt in connections[cur_point]
                        if pnt != prev_point ]
         if not next_points: break
         next_point = next_points[0]
@@ -72,13 +72,13 @@ def pairs_by_dist(N, distances):
         for j in xrange(i+1,N):
             indices[idx] = (i,j)
             idx += 1
-            
+
     indices.sort(key = lambda ij: distances[ij[0]][ij[1]])
     return indices
-    
+
 def solve_tsp( distances, optim_steps=3, pairs_by_dist=pairs_by_dist ):
     """Given a distance matrix, finds a solution for the TSP problem.
-    Returns list of vertex indices. 
+    Returns list of vertex indices.
     Guarantees that the first index is lower than the last"""
     N = len(distances)
     if N == 0: return []
@@ -88,21 +88,21 @@ def solve_tsp( distances, optim_steps=3, pairs_by_dist=pairs_by_dist ):
 
     #State of the TSP solver algorithm.
     node_valency = pyarray('i', [2])*N #Initially, each node has 2 sticky ends
-    
+
     #for each node, stores 1 or 2 connected nodes
-    connections = [[] for i in xrange(N)] 
+    connections = [[] for i in xrange(N)]
 
     def join_segments(sorted_pairs):
         #segments of nodes. Initially, each segment contains only 1 node
         segments = [ [i] for i in xrange(N) ]
-  
+
         def filtered_pairs():
-            #Generate sequence of 
+            #Generate sequence of
             for ij in sorted_pairs:
                 i,j = ij
                 if not node_valency[i] or\
                         not node_valency[j] or\
-                        (segments[i] is segments[j]): 
+                        (segments[i] is segments[j]):
                     continue
                 yield ij
 

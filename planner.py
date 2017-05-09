@@ -1,9 +1,12 @@
+#!/usr/bin/python
+
 import foursquare
 import json
 import googlemaps
 import greedy
 import datetime
 import random
+import re
 
 google_places_key = "AIzaSyBOPCrZfbG9rYtuihd3XmkBXZ2KfGRIy2I"
 google_client = googlemaps.Client(google_places_key)
@@ -14,12 +17,14 @@ client = foursquare.Foursquare(client_id='OOZYA3IHMYSRWK15Z1K24BJCUY2KFYF3SIJ2J4
 def get_top_places(city):
 	places = google_client.places(query=city+" tourist attraction")["results"]
 	places = [place for place in places if "travel_agency" not in place["types"]]
+	#sorted(places, key = lambda x : x["rating"])
 	random.shuffle(places)
 	return places[:10]
 
 def get_distance_matrix(places, city):
 	places_names = map(lambda x: x["name"] + ", " + x["formatted_address"], places)
 	matrix = google_client.distance_matrix(places_names, places_names)
+	#print places
 	return matrix
 
 def filter_places(matrix):
@@ -41,7 +46,7 @@ def get_random_string(strings):
 def build_text_response(city, route_sequence, matrix, places):
 	text_response = get_random_string(welcome_lines) + city + ". "
 	current_time = datetime.datetime(100,1,1,9,0,0)
-	
+
 	text_response += 'Your day starts at ' + places[0]["name"] + ", "
 	text_response += 'and includes amazing places to visit such as '
 	text_response += ", ".join(map(lambda x: x["name"], places[1:-1]))
@@ -66,6 +71,7 @@ def build_card_response(route_sequence, matrix, places):
 			card_response += "Next destination is " + str(matrix[idx][route_sequence[i + 1]] / 60) + " minutes away\n\n"
 		else:
 			card_response += "\nYour day ends here, Hope you have a great trip!"
+	print card_response
 	return card_response
 
 def get_image(places):
@@ -81,12 +87,41 @@ def get_image(places):
 			return photo
 	return None
 
-def get_route_sequence(city):
+def get_time_hours(time):
+	duration = 0
+	temp = 0
+	index = re.search("\d", time)
+	for i in range(index.start(), len(time)):
+		if time[i].isdigit():
+			temp = temp * 10 + int(time[i])
+		else:
+			if time[i] == "H":
+				duration = duration + temp
+			elif time[i] == "M":
+				duration = duration + temp/60
+			elif time[i] == "D":
+				duration = duration + temp * 24
+			temp = 0
+	print duration
+	return duration
+
+def check_time(route_sequence, matrix):
+	time_taken = 0
+	for i in range(len(route_sequence)):
+		idx = route_sequence[i]
+		if i+1 < len(route_sequence):
+			time_taken += 30 + (matrix[idx][route_sequence[i + 1]]) / 60
+	return (time_taken + 30)
+
+def get_route_sequence(city, time):
+	print "Getting route sequence"
+	time = get_time_hours(time)
 	places = get_top_places(city)
 	matrix = get_distance_matrix(places, city)
 	filtered_places = filter_places(matrix)
 	places = [place for idx, place in enumerate(places) if idx not in filtered_places]
 	mat = []
+	route_sequence = []
 	for idx, row in enumerate(matrix["rows"]):
 		if idx in filtered_places:
 			continue
@@ -104,7 +139,15 @@ def get_route_sequence(city):
 			if jdx not in filtered_places:
 				matrow.append(col["duration"]["value"])
 		timemat.append(matrow)
-	route_sequence = greedy.solve_tsp(mat)
+	for i in range(len(mat) + 1):
+		route_sequence = greedy.solve_tsp(mat)
+		if check_time(route_sequence, timemat) <= time * 60:
+			break
+		else:
+			mat = mat[:len(mat) - 1]
+			for row in mat:
+				del row[len(mat)]
+
 	places_names = map(lambda x: x["name"], places)
 	route = map(lambda x: places_names[x], route_sequence)
 	card_response = build_card_response(route_sequence, timemat, places)
