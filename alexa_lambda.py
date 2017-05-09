@@ -3,6 +3,8 @@ import json
 # --------------- Helpers that build all of the responses ----------------------
 
 def build_speechlet_response(title, card_output, output, reprompt_text, should_end_session, photo = None):
+	if reprompt_text:
+		reprompt_text = "<speak>" + reprompt_text + "</speak>"
 	response = {
 		'outputSpeech': {
 			'type': 'SSML',
@@ -16,13 +18,13 @@ def build_speechlet_response(title, card_output, output, reprompt_text, should_e
 		'reprompt': {
 			'outputSpeech': {
 				'type': 'SSML',
-				'ssml': "<speak>" + reprompt_text + "</speak>"
+				'ssml': reprompt_text
 			}
 		},
 		'shouldEndSession': should_end_session
 	}
-	if photo:
-		response['card']['image'] = photo
+	# if photo:
+	# 	response['card']['image'] = photo
 	print(response)
 	return response
 
@@ -94,19 +96,31 @@ def get_trip_from_session(intent, session):
 	should_end_session = True
 
 	if 'city' in intent['slots'] and 'value' in intent['slots']['city']:
-		city = intent['slots']['city']['value']
-		print("Request is for " + city)
-		card_title += " in " + city
-		session_attributes = create_current_city_attributes(city)
-		(text_response, card_response, photo) = planner.get_route_sequence(city)
-		speech_output = text_response
-		speech_output = speech_output.replace("&", "and")
-		reprompt_text = speech_output
+		try:
+			city = intent['slots']['city']['value']
+			print("Request is for " + city)
+			card_title += " in " + city
+			session_attributes = create_current_city_attributes(city)
+			(text_response, card_response, photo) = planner.get_route_sequence(city)
+			speech_output = text_response
+			speech_output = speech_output.replace("&", "and")
+			reprompt_text = speech_output
+		except Exception as e:
+			print("City is not there in the request")
+			speech_output = "I'm not sure what city you referred to. " \
+							"Please try again."
+			reprompt_text = speech_output
+			card_response = "Try again. Note that only cities in USA are supported."
+			photo = None
+			should_end_session = False
 	else:
 		print("City is not there in the request")
 		speech_output = "I'm not sure what city you referred to. " \
 						"Please try again."
 		reprompt_text = speech_output
+		card_response = "Try again. Note that only cities in USA are supported."
+		photo = None
+		should_end_session = False
 	return build_response(session_attributes, build_speechlet_response(
 		card_title, card_response, speech_output, reprompt_text, should_end_session, photo = photo))
 
